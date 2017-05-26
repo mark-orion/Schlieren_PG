@@ -1,10 +1,11 @@
 #!/usr/bin/env python
+import sys
 import random
+import argparse
 from kivy.app import App
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.image import Image
-from kivy.uix.label import Label
 from kivy.uix.button import Button
 from kivy.uix.togglebutton import ToggleButton
 from kivy.uix.spinner import Spinner
@@ -111,10 +112,8 @@ class SchlierenPGApp(App):
     def toggle_controlbar(self, instance, value):
         if value == 'down':
             self.hide.start(self.controlbar)
-            self.showbar.opacity = 0.2
         else:
             self.show.start(self.controlbar)
-            self.showbar.opacity = 1.0
 
     def build(self):
 
@@ -138,8 +137,23 @@ class SchlierenPGApp(App):
         self.mainscreen.add_widget(self.controlbar)
 
         # the controlbar animation
-        self.show = Animation(pos_hint={'right':0.5})
-        self.hide = Animation(pos_hint={'right':0.1})
+        self.show = Animation(pos_hint={'right':0.5}, opacity=1.0)
+        self.hide = Animation(pos_hint={'right':0.1}, opacity=0.2)
+
+        # the command line parser
+        parser = argparse.ArgumentParser(description='Schlieren Imaging Pattern Generator')
+        parser.add_argument('-n', '--no_controlbar', action='store_true', help='hide controlbar')
+        parser.add_argument('-p', '--pattern_type', default=self.choose_pattern.text, help='pattern type (CHQ, HOR, VER, RND)')
+        parser.add_argument('-s', '--pattern_size', default=str(self.output.patternsize), help='pattern size')
+        self.args = parser.parse_args(sys.argv[2:])
+
+        # apply command line parameters
+        if self.args.no_controlbar:
+            self.controlbar.pos_hint={'right':-1}
+        self.choose_pattern.text = self.args.pattern_type
+        self.output.patterntype = self.args.pattern_type
+        self.output.patternsize = int(self.args.pattern_size)
+        self.size.text = str(self.output.patternsize)
 
         # the events
         self.bigger.bind(on_release=self.increase_size)
